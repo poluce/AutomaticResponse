@@ -1,0 +1,44 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icon_png/bangzhu.png</file>
+        <file>icon_png/bianji.png</file>
+        <file>icon_png/cuowu.png</file>
+        <file>icon_png/daohang.png</file>
+        <file>icon_png/daoru.png</file>
+        <file>icon_png/fasong.png</file>
+        <file>icon_png/faxian.png</file>
+        <file>icon_png/fenlei.png</file>
+        <file>icon_png/fenxiang.png</file>
+        <file>icon_png/gouxuan.png</file>
+        <file>icon_png/guanbi.png</file>
+        <file>icon_png/jiahao.png</file>
+        <file>icon_png/jianshao.png</file>
+        <file>icon_png/jilu.png</file>
+        <file>icon_png/jinggao.png</file>
+        <file>icon_png/liebiao.png</file>
+        <file>icon_png/mingxi.png</file>
+        <file>icon_png/pinglun.png</file>
+        <file>icon_png/saoyisao.png</file>
+        <file>icon_png/shaixuan.png</file>
+        <file>icon_png/shanchu.png</file>
+        <file>icon_png/shangyiye.png</file>
+        <file>icon_png/shezhi.png</file>
+        <file>icon_png/shoucang.png</file>
+        <file>icon_png/shouye.png</file>
+        <file>icon_png/shuaxin.png</file>
+        <file>icon_png/shujuku.png</file>
+        <file>icon_png/sousuo.png</file>
+        <file>icon_png/tianjia.png</file>
+        <file>icon_png/tongzhi.png</file>
+        <file>icon_png/wenjian.png</file>
+        <file>icon_png/wenjianjia.png</file>
+        <file>icon_png/wode.png</file>
+        <file>icon_png/xiangshang.png</file>
+        <file>icon_png/xiangxia.png</file>
+        <file>icon_png/xiaoxi.png</file>
+        <file>icon_png/xiayiye.png</file>
+        <file>icon_png/xiazai.png</file>
+        <file>icon_png/zhengque.png</file>
+        <file>customQss/mainWindow.css</file>
+    </qresource>
+</RCC>

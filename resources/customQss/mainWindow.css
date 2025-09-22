@@ -1,0 +1,35 @@
+/*mainWindow*/
+
+MainWindow{
+      background-color: qlineargradient(
+            x1:0, y1:0, x2:1, y2:1,           /* 渐变方向：从上到下 */
+            stop:0 #ECE9E6,
+            stop:1 #FFFFFF
+      );
+}
+
+SideWidget#MainWindow_sideWidget {
+      background-color: qlineargradient(
+      x1:0, y1:0, x2:0, y2:1,           /* 渐变方向：从上到下 */
+      stop:0 #14D4FF,
+      stop:1 #B76ADE
+);
+      border-radius: 8px;
+}
+
+/*HomePage*/
+#HomePage_sendTextEdit,
+#HomePage_receiveTextEdit {
+      border-bottom: 2px solid transparent;  /* 默认透明边框 */
+      border-radius: 4px;       /* 圆角 */
+      background-color: #FFFFFF;
+}
+#HomePage_sendTextEdit:focus,
+#HomePage_receiveTextEdit:focus {
+      border-bottom: 2px solid qlineargradient(
+      x1:0, y1:0, x2:1, y2:0,           /* 渐变方向：从上到下 */
+      stop:0 #fceabb,                   /* 顶部颜色 */
+      stop:1 #f8b500                    /* 底部颜色 */
+  );   /* 获得焦点时边框颜色 */
+}
+

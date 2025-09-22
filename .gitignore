@@ -73,5 +73,6 @@ Thumbs.db
 
 # Build output
 build-*
+build
 
 src/version/version.h
