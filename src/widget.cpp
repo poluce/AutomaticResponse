@@ -51,7 +51,6 @@ void Widget::initUI()
     delayTime = new QSpinBox;
     delayTime->setSuffix("/ms");
     delayTime->setRange(100, 200000);
-    delayTime->setDisplayIntegerBase(100);
     delayTimer = new QTimer(this);
     setButton = new QPushButton("设置");
 
