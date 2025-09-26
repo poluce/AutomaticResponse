@@ -3,12 +3,14 @@
 
 #include "localsqllite.h"
 #include <QCheckBox>
+#include <QComboBox>
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QStackedWidget>
+#include <QTabWidget>
 #include <QTableWidget>
 #include <QTcpServer>
 #include <QTextEdit>
@@ -24,6 +26,7 @@ public:
     void initData();
     void initResponseTable();
     void appendReceiveText(QString title, QString str);
+    QTableWidget* creatCustomTabWidget();
 
 signals:
 
@@ -56,10 +59,14 @@ private:
     QCheckBox* responseFunction;
     QCheckBox* delayFunction;
     QPushButton* responseEditButton;
+    QComboBox* configBox;
 
     QGroupBox* editWidgetGroup;
     QStackedWidget* editWidget;
-    QTableWidget* responseTable;
+    QTabWidget* rulesTabWidget;
+    QTableWidget* responseTableDSC;
+    QTableWidget* responseTableARC;
+    QTableWidget* responseTableTG;
 
     // 发送接收
     QGroupBox* receiveGroup;

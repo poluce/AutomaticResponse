@@ -24,6 +24,24 @@ QFont CustomStyle::getIconFont(int size) const
     return QFont(iconFontFamily, size);
 }
 
+QString CustomStyle::getPixmapPath(const QString& iconname)
+{
+
+    if (iconname == "导航") {
+        return ":/icon_png/daohang.png";
+    } else if (iconname == "配置") {
+        return ":/icon_png/bianji.png";
+    } else if (iconname == "数据库") {
+        return ":/icon_png/shujuku.png";
+    } else if (iconname == "首页") {
+        return ":/icon_png/shouye.png";
+    } else if (iconname == "设置") {
+        return ":/icon_png/shezhi.png";
+    }
+
+    return "";
+}
+
 void CustomStyle::loadStyleSheet(QWidget* widget, const QString& fileNamePath, const QString& otherstyle)
 {
     if (!widget) {

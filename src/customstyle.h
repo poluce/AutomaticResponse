@@ -22,6 +22,7 @@ public:
 
     QChar getIconChar(const QString& str) const;
     QFont getIconFont(int size = 16) const;
+    static QString getPixmapPath(const QString& str);
 
 private:
     CustomStyle();      // 默认构造

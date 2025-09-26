@@ -8,6 +8,9 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QThread>
+
+#define DB_NAME "replydata.db"
+
 LocalSqlLite* LocalSqlLite::instance()
 {
     Q_ASSERT(QThread::currentThread() == qApp->thread());
@@ -20,35 +23,34 @@ LocalSqlLite::LocalSqlLite(QObject* parent)
 {
     initDatabase();
     // loadData();
-    readAutoReplyData();
+    readDSCAutoReplyData();
 }
 
 void LocalSqlLite::initDatabase()
 {
-    // 添加一个数据库连接，类型指定为 SQLite
-    db = QSqlDatabase::addDatabase("QSQLITE");
     // 判断文件是否已存在
-    QString dbName = "replydata.db";
-    bool existed = QFile::exists(dbName);
+    bool existed = QFile::exists(DB_NAME);
+    // 添加一个数据库连接，类型指定为 SQLite
+    QSqlDatabase db1 = QSqlDatabase::addDatabase("QSQLITE");
+    db1.setDatabaseName(DB_NAME); // 对于 QSQLITE 驱动程序，如果指定的数据库名称不存在，则会创建该文件
 
-    db.setDatabaseName(dbName); // 对于 QSQLITE 驱动程序，如果指定的数据库名称不存在，则会创建该文件
+    if (!existed) {
+        qDebug() << "数据库文件不存在，重新创建";
+        setDatabase();
+    }
 
-    if (!db.open()) {
-        qDebug() << "打开数据库失败:" << db.lastError().text();
+    if (!db().open()) {
+        qDebug() << "打开数据库失败:" << db().lastError().text();
         return;
     }
 
-    if (existed) {
-        qDebug() << "数据库已存在";
-    } else {
-        qDebug() << "数据库不存在，创建新数据库";
-        createTable();
-    }
+    // TODO:检查是否有需要的数据表
+    checkRequiredTables();
 }
 
-void LocalSqlLite::createTable()
+void LocalSqlLite::createMissingTables(const QStringList& tableList)
 {
-    QString sql = R"(CREATE TABLE IF NOT EXISTS auto_reply_rules (
+    QString sql = R"(CREATE TABLE IF NOT EXISTS %1 (
         id INTEGER PRIMARY KEY AUTOINCREMENT,       /*SQLite 的自增主键*/
         is_enabled INTEGER NOT NULL DEFAULT 1,    /*用 INTEGER 存储布尔值, 1 代表 true, 0 代表 false*/
         match_command TEXT NOT NULL,              /*字符串统一使用 TEXT*/
@@ -59,15 +61,34 @@ void LocalSqlLite::createTable()
         timeout_response TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
     );)";
-    QSqlQuery query(sql);
-    if (query.lastError().isValid()) {
-        qDebug() << "创建表失败:" << query.lastError().text();
-        return;
-    } else {
-        qDebug() << "创建表成功或已存在！";
+
+    db().open();
+    QSqlQuery query;
+    for (auto& it : tableList) {
+        QString querySql = sql.arg(it);
+        query.exec(querySql);
+        if (query.lastError().isValid()) {
+            qDebug() << "创建" << it << "表失败:" << query.lastError().text();
+        } else {
+            qDebug() << "创建" << it << "表成功！";
+        }
     }
 }
 
+void LocalSqlLite::setDatabase()
+{
+    QStringList list = { "auto_reply_rules_dsc", "auto_reply_rules_arc", "auto_reply_rules_tg" };
+
+    // 创建表
+    createMissingTables(list);
+}
+
+QSqlDatabase LocalSqlLite::db()
+{
+    return QSqlDatabase::database();
+}
+
+// 用来从指定的congfig文件
 void LocalSqlLite::loadData()
 {
     QFile file("config.json");
@@ -86,7 +107,7 @@ void LocalSqlLite::loadData()
     }
 
     QJsonObject obj = doc.object();
-    db.open();
+    db().open();
     QSqlQuery query;
     QString insertSql = R"(INSERT INTO auto_reply_rules
         (is_enabled, match_command, response_template, remarks, delayed_time, timeout_response)
@@ -123,10 +144,10 @@ void LocalSqlLite::loadData()
     }
 }
 
-QVector<AutoReplyRule> LocalSqlLite::readAutoReplyData()
+QVector<AutoReplyRule> LocalSqlLite::readDSCAutoReplyData()
 {
     QVector<AutoReplyRule> results;
-    QString sql = "SELECT id,is_enabled, match_command, response_template, remarks, delayed_time,is_delay_enabled, timeout_response FROM auto_reply_rules";
+    QString sql = "SELECT id,is_enabled, match_command, response_template, remarks, delayed_time,is_delay_enabled, timeout_response FROM auto_reply_rules_dsc";
     QSqlQuery query(sql);
     while (query.next()) {
         AutoReplyRule tmp;
@@ -142,4 +163,62 @@ QVector<AutoReplyRule> LocalSqlLite::readAutoReplyData()
         qDebug() << tmp;
     }
     return results;
+}
+
+QStringList LocalSqlLite::getMissingTables(const QStringList& requiredTables, const QSqlDatabase& db)
+{
+    // 构建查询，检查多个表
+    QString placeholders = QString("?,").repeated(requiredTables.size());
+    placeholders.chop(1); // 移除最后一个逗号
+
+    QString sql = QString("SELECT name FROM sqlite_master WHERE type='table' AND name IN (%1)")
+                      .arg(placeholders);
+
+    QSqlQuery query(db);
+    query.prepare(sql);
+
+    // 绑定所有表名
+    for (const QString& tableName : requiredTables) {
+        query.addBindValue(tableName);
+    }
+
+    // 获取存在的表
+    QStringList existingTables;
+    if (query.exec()) {
+        while (query.next()) {
+            existingTables << query.value(0).toString();
+        }
+    } else {
+        qDebug() << "查询失败:" << query.lastError().text();
+        return requiredTables; // 如果查询失败，假设所有表都不存在
+    }
+
+    // 找出缺失的表
+    QStringList missingTables;
+    for (const QString& required : requiredTables) {
+        if (!existingTables.contains(required)) {
+            missingTables << required;
+        }
+    }
+
+    return missingTables;
+}
+
+void LocalSqlLite::checkRequiredTables()
+{
+    QStringList requiredTables = {
+        "auto_reply_rules_dsc",
+        "auto_reply_rules_arc",
+        "auto_reply_rules_tg"
+    };
+
+    QStringList missingTables = getMissingTables(requiredTables, db());
+
+    if (missingTables.isEmpty()) {
+        qDebug() << "所有必需的表都存在";
+    } else {
+        qDebug() << "缺失的表:" << missingTables;
+        // 创建缺失的表
+        createMissingTables(missingTables);
+    }
 }

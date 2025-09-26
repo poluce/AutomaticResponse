@@ -11,14 +11,18 @@ class LocalSqlLite : public QObject {
 public:
     static LocalSqlLite* instance();
 
-    QVector<AutoReplyRule> readAutoReplyData();
+    QVector<AutoReplyRule> readDSCAutoReplyData();
 
 private:
     explicit LocalSqlLite(QObject* parent = nullptr);
     LocalSqlLite(const LocalSqlLite&) = delete;            // 禁止拷贝构造
     LocalSqlLite& operator=(const LocalSqlLite&) = delete; // 禁止赋值
     void initDatabase();
-    void createTable();
+    void createMissingTables(const QStringList& tableList);
+    void setDatabase();
+    QSqlDatabase db();
+    void checkRequiredTables();
+    QStringList getMissingTables(const QStringList& requiredTables, const QSqlDatabase& db);
 
     // 迁移函数从json文件到数据库
     void loadData();
@@ -27,9 +31,6 @@ private:
     // TODO:添加写入数据的函数
 
 signals:
-
-private:
-    QSqlDatabase db;
 };
 
 #endif // LOCALSQLLITE_H

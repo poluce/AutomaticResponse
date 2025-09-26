@@ -14,7 +14,9 @@ SOURCES += \
     src/localsqllite.cpp \
     src/main.cpp \
     src/mainwindow.cpp \
-    src/sidewidget.cpp \
+    src/sidebar.cpp \
+    src/sidebaroptionsbutton.cpp \
+    src/sidebarwidget.cpp \
     src/widget.cpp
 
 
@@ -24,7 +26,9 @@ HEADERS += \
     src/homepage.h \
     src/localsqllite.h \
     src/mainwindow.h \
-    src/sidewidget.h \
+    src/sidebar.h \
+    src/sidebaroptionsbutton.h \
+    src/sidebarwidget.h \
     src/widget.h
 
 

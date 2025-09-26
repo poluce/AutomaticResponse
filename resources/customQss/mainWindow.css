@@ -8,12 +8,12 @@ MainWindow{
       );
 }
 
-SideWidget#MainWindow_sideWidget {
+SidebarWidget#MainWindow_sideWidget {
       background-color: qlineargradient(
-      x1:0, y1:0, x2:0, y2:1,           /* 渐变方向：从上到下 */
+      x1:0, y1:0, x2:0, y2:1,
       stop:0 #14D4FF,
       stop:1 #B76ADE
-);
+      );
       border-radius: 8px;
 }
 

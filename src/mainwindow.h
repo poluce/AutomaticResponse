@@ -1,7 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "sidewidget.h"
+#include "sidebarwidget.h"
 #include <QMainWindow>
 #include <QStackedWidget>
 #include <QWidget>
@@ -16,9 +16,13 @@ public:
     void initConnect();
 
 signals:
+protected:
+    void resizeEvent(QResizeEvent* event);
+
 private:
-    SideWidget* sideWidget;
+    SidebarWidget* sidebar;
     QStackedWidget* mainStackedWidget;
+    QSpacerItem* placeholder;
 };
 
 #endif // MAINWINDOW_H

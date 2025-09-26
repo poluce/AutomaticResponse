@@ -34,6 +34,11 @@ void HomePage::initUI()
     applyButton = new QPushButton("开启服务");
     applyButton->setCheckable(true);
 
+    configBox = new QComboBox;
+    configBox->addItem("DSC");
+    configBox->addItem("ARC");
+    configBox->addItem("TG");
+
     // 功能配置
     functionConfigGroup = new QGroupBox("功能配置");
     responseFunction = new QCheckBox("自动应答");
@@ -46,19 +51,18 @@ void HomePage::initUI()
     // 配置编辑窗口
     editWidgetGroup = new QGroupBox("信息配置");
     editWidgetGroup->hide();
-    responseTable = new QTableWidget;
-    editWidget = new QStackedWidget;
-    editWidget->addWidget(responseTable);
 
-    responseTable->setColumnCount(6);
-    responseTable->setHorizontalHeaderLabels({ "开启状态", "匹配指令", "应答", "备注", "延迟时间", "延时应答" });
-    responseTable->horizontalHeader()->setStretchLastSection(true);
-    responseTable->verticalHeader()->setVisible(false);
-    responseTable->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
-    responseTable->setContextMenuPolicy(Qt::ContextMenuPolicy::ActionsContextMenu);
-    responseTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    responseTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeMode::ResizeToContents);
-    responseTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeMode::ResizeToContents);
+    responseTableDSC = creatCustomTabWidget();
+    responseTableARC = creatCustomTabWidget();
+    responseTableTG = creatCustomTabWidget();
+
+    rulesTabWidget = new QTabWidget;
+    rulesTabWidget->addTab(responseTableDSC, "DSC");
+    rulesTabWidget->addTab(responseTableARC, "ARC");
+    rulesTabWidget->addTab(responseTableTG, "TG");
+
+    editWidget = new QStackedWidget;
+    editWidget->addWidget(rulesTabWidget);
 
     // 接收
     receiveGroup = new QGroupBox("消息接收区");
@@ -86,6 +90,7 @@ void HomePage::initLayout()
     severLayout->addWidget(severPortLabel);
     severLayout->addWidget(severPortSpinBox);
     severLayout->addWidget(applyButton);
+    severLayout->addWidget(configBox);
 
     QGridLayout* functionLayout = new QGridLayout(functionConfigGroup);
     functionLayout->addWidget(responseFunction, 0, 0, 1, 1);
@@ -152,22 +157,22 @@ void HomePage::initData()
 
 void HomePage::initResponseTable()
 {
-    QVector<AutoReplyRule> tmp = localSqlLite->readAutoReplyData();
-    responseTable->setRowCount(tmp.size());
+    QVector<AutoReplyRule> tmp = localSqlLite->readDSCAutoReplyData();
+    responseTableDSC->setRowCount(tmp.size());
     for (int i = 0; i < tmp.size(); i++) {
         QCheckBox* enableStatus = new QCheckBox;
         enableStatus->setChecked(tmp.at(i).isEnabled);
-        responseTable->setCellWidget(i, 0, enableStatus);
+        responseTableDSC->setCellWidget(i, 0, enableStatus);
 
-        responseTable->setItem(i, 1, new QTableWidgetItem(tmp.at(i).matchCommand));
-        responseTable->setItem(i, 2, new QTableWidgetItem(tmp.at(i).responseTemplate));
-        responseTable->setItem(i, 3, new QTableWidgetItem(tmp.at(i).remarks));
+        responseTableDSC->setItem(i, 1, new QTableWidgetItem(tmp.at(i).matchCommand));
+        responseTableDSC->setItem(i, 2, new QTableWidgetItem(tmp.at(i).responseTemplate));
+        responseTableDSC->setItem(i, 3, new QTableWidgetItem(tmp.at(i).remarks));
 
         QCheckBox* delayStatus = new QCheckBox(QString::number(tmp.at(i).delayedTime));
         delayStatus->setChecked(tmp.at(i).isDelayEnabled);
-        responseTable->setCellWidget(i, 4, delayStatus);
+        responseTableDSC->setCellWidget(i, 4, delayStatus);
 
-        responseTable->setItem(i, 5, new QTableWidgetItem(tmp.at(i).timeoutResponse));
+        responseTableDSC->setItem(i, 5, new QTableWidgetItem(tmp.at(i).timeoutResponse));
     }
 }
 
@@ -178,6 +183,21 @@ void HomePage::appendReceiveText(QString title, QString str)
     receiveTextEdit->append(receiveText);
     receiveTextEdit->moveCursor(QTextCursor::End);
     receiveTextEdit->ensureCursorVisible();
+}
+
+QTableWidget* HomePage::creatCustomTabWidget()
+{
+    QTableWidget* table = new QTableWidget();
+    table->setColumnCount(6);
+    table->setHorizontalHeaderLabels({ "开启状态", "匹配指令", "应答", "备注", "延迟时间", "延时应答" });
+    table->horizontalHeader()->setStretchLastSection(true);
+    table->verticalHeader()->setVisible(false);
+    table->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+    table->setContextMenuPolicy(Qt::ContextMenuPolicy::ActionsContextMenu);
+    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeMode::ResizeToContents);
+    table->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeMode::ResizeToContents);
+    return table;
 }
 
 void HomePage::onApplyButtonClicked(bool checked)
@@ -254,27 +274,29 @@ void HomePage::onClientDataReady()
         return;
     }
 
+    // TODO:需要根据选择的应答模板显示
+
     // 检查匹配模板
-    for (int i = 0; i < responseTable->rowCount(); i++) {
+    for (int i = 0; i < responseTableDSC->rowCount(); i++) {
 
         // 前置应答勾选检查
-        QCheckBox* cb = qobject_cast<QCheckBox*>(responseTable->cellWidget(i, 0));
+        QCheckBox* cb = qobject_cast<QCheckBox*>(responseTableDSC->cellWidget(i, 0));
         if (!cb->isChecked()) {
             return;
         }
 
         // 匹配检查
-        QTableWidgetItem* item = responseTable->item(i, 1); // 获取匹配指令列
+        QTableWidgetItem* item = responseTableDSC->item(i, 1); // 获取匹配指令列
         if (item->text().trimmed() != data) {
             continue;
         }
         // 发送应答模板
-        QString hexString = responseTable->item(i, 2)->text().remove(' '); // 移除空格转换为16进制数据
+        QString hexString = responseTableDSC->item(i, 2)->text().remove(' '); // 移除空格转换为16进制数据
         QByteArray hexData = QByteArray::fromHex(hexString.toUtf8());
         clientSocket->write(hexData);
 
         QString resStr = QString("%1::%2")
-                             .arg(responseTable->item(i, 3)->text(), responseTable->item(i, 2)->text());
+                             .arg(responseTableDSC->item(i, 3)->text(), responseTableDSC->item(i, 2)->text());
         appendReceiveText("自动应答", resStr);
 
         // 主页延时应答勾选检查
@@ -282,19 +304,19 @@ void HomePage::onClientDataReady()
             return;
         }
         // 是否勾选延时应答
-        QCheckBox* cb2 = qobject_cast<QCheckBox*>(responseTable->cellWidget(i, 4));
+        QCheckBox* cb2 = qobject_cast<QCheckBox*>(responseTableDSC->cellWidget(i, 4));
         if (!cb2->isChecked()) {
             return;
         }
 
         // 判断是否有延时应答内容
-        if (!(responseTable->item(i, 5)->text().remove(' ').length() > 0)) {
+        if (!(responseTableDSC->item(i, 5)->text().remove(' ').length() > 0)) {
             return;
         }
 
         // 设置定时器，延时发送
         QTimer::singleShot(cb2->text().toInt(), this, [=]() {
-            onResponseToDelay(clientSocket, responseTable->item(i, 3)->text(), responseTable->item(i, 5)->text());
+            onResponseToDelay(clientSocket, responseTableDSC->item(i, 3)->text(), responseTableDSC->item(i, 5)->text());
         });
 
         qDebug() << "自动应答：" << hexString;

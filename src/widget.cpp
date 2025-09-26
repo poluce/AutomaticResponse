@@ -74,7 +74,7 @@ void Widget::initData()
 {
     QFile file("config.json");
     if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << "无法打开文件";
+        qDebug() << "widget无法打开文件";
         return;
     }
 
