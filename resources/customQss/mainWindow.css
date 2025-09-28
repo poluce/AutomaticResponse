@@ -32,4 +32,7 @@ SidebarWidget#MainWindow_sideWidget {
       stop:1 #f8b500                    /* 底部颜色 */
   );   /* 获得焦点时边框颜色 */
 }
-
+#HomePage_clienInfoWidget{
+      border-bottom: 2px solid transparent;  /* 默认透明边框 */
+      border-radius: 4px;       /* 圆角 */
+}

@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget* parent)
     initUI();
     initLayout();
     initConnect();
+    resize(1200, 800);
 }
 
 void MainWindow::initUI()

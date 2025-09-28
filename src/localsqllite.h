@@ -7,11 +7,22 @@
 
 class LocalSqlLite : public QObject {
     Q_OBJECT
+public:
+    enum class DataName {
+        DSC,
+        ARC,
+        TG,
+    };
 
 public:
     static LocalSqlLite* instance();
 
+    // 读数据
     QVector<AutoReplyRule> readDSCAutoReplyData();
+    QVector<AutoReplyRule> readTGAutoReplyData();
+    QVector<AutoReplyRule> readARCAutoReplyData();
+    // 写数据
+    void writeAutoReplyData(const DataName& dataName, const QVector<AutoReplyRule>& data);
 
 private:
     explicit LocalSqlLite(QObject* parent = nullptr);
@@ -26,9 +37,6 @@ private:
 
     // 迁移函数从json文件到数据库
     void loadData();
-
-    // TODO:添加读取数据的函数
-    // TODO:添加写入数据的函数
 
 signals:
 };

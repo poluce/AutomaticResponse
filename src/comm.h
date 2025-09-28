@@ -34,4 +34,26 @@ struct AutoReplyRule {
     }
 };
 
+struct InputRule {
+    QString commandMatching;
+    QString responseTemplate;
+    int delayTime;
+    QString responseDelay;
+    QString remark;
+
+    // 友元打印函数
+    friend QDebug operator<<(QDebug dbg, const InputRule& rule)
+    {
+        QDebugStateSaver saver(dbg);
+        dbg.nospace() << "ReplyRuleInfo("
+                      << "  匹配指令: " << rule.commandMatching
+                      << "  应答模板: " << rule.responseTemplate
+                      << "  延迟时间: " << rule.delayTime
+                      << "  延迟应答指令: " << rule.responseDelay
+                      << "  备注: " << rule.remark
+                      << ")";
+        return dbg;
+    }
+};
+
 #endif // COMM_H
