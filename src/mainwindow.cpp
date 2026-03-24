@@ -3,8 +3,6 @@
 #include "homepage.h"
 #include "localsqllite.h"
 
-#include "widget.h"
-
 #include <QHBoxLayout>
 
 MainWindow::MainWindow(QWidget* parent)
@@ -31,8 +29,9 @@ void MainWindow::initUI()
     sidebar->setObjectName("MainWindow_sideWidget");
     sidebar->raise();
     mainStackedWidget = new QStackedWidget;
-    mainStackedWidget->addWidget(new HomePage(LocalSqlLite::instance()));
-    mainStackedWidget->addWidget(new Widget);
+    homePage = new HomePage(LocalSqlLite::instance());
+    mainStackedWidget->addWidget(homePage);
+    mainStackedWidget->addWidget(new QWidget);
     mainStackedWidget->addWidget(new QWidget);
 }
 

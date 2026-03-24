@@ -31,6 +31,10 @@ public:
     void initResponseTable();
     void appendReceiveText(QString title, QString str);
 
+    void sendResponseMessage(QTcpSocket* clientSocket, QString data, const QString& selectItemName);
+    QVector<AutoReplyRule> getTableData(QString name);
+    void onInputRuleButtonCliecked(const InputRule& rule);
+
 signals:
 
 private slots:
@@ -42,7 +46,6 @@ private slots:
     void onResponseToDelay(QTcpSocket* socket, QString title, QString str);
     void onClearSendButtonClicked();
     void oncCearReceiveButtonClicked();
-    void onInputRuleButtonCliecked(const InputRule& rule);
     void onSendButtonClicked();
 
     void deleteActionTriggered();
@@ -50,11 +53,9 @@ private slots:
 
 private:
     QTableWidget* creatCustomTabWidget();
-    void sendResponseMessage(QTcpSocket* clientSocket, QString data, const QString& selectItemName);
     QWidget* findTabByName(QTabWidget* tabWidget, const QString& tabName);
     void fillTableData(QTableWidget* tabWidget, const QVector<AutoReplyRule>& data);
     QString clientAddressInfo(QTcpSocket* clientSocket);
-    QVector<AutoReplyRule> getTableData(QString name);
     QVector<AutoReplyRule> readTableData(QTableWidget* tabWidget);
 
     void initMenu();

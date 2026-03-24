@@ -6,6 +6,8 @@
 #include <QStackedWidget>
 #include <QWidget>
 
+class HomePage;
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
@@ -23,6 +25,7 @@ private:
     SidebarWidget* sidebar;
     QStackedWidget* mainStackedWidget;
     QSpacerItem* placeholder;
+    HomePage* homePage;
 };
 
 #endif // MAINWINDOW_H

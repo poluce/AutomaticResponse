@@ -268,42 +268,49 @@ void HomePage::sendResponseMessage(QTcpSocket* clientSocket, QString data, const
 
         // 前置应答勾选检查
         QCheckBox* cb = qobject_cast<QCheckBox*>(tableWidget->cellWidget(i, 0));
-        if (!cb->isChecked()) {
-            return;
+        if (!cb || !cb->isChecked()) {
+            continue;
         }
 
         // 匹配检查
         QTableWidgetItem* item = tableWidget->item(i, 1); // 获取匹配指令列
-        if (item->text().trimmed() != data) {
+        if (!item || item->text().trimmed() != data) {
             continue;
         }
         // 发送应答模板
-        QString hexString = tableWidget->item(i, 2)->text().remove(' '); // 移除空格转换为16进制数据
+        QTableWidgetItem* responseItem = tableWidget->item(i, 2);
+        QTableWidgetItem* remarkItem = tableWidget->item(i, 3);
+        if (!responseItem || !remarkItem) {
+            continue;
+        }
+
+        QString hexString = responseItem->text().remove(' '); // 移除空格转换为16进制数据
         QByteArray hexData = QByteArray::fromHex(hexString.toUtf8());
         clientSocket->write(hexData);
 
         QString resStr = QString("%1::%2")
-                             .arg(tableWidget->item(i, 3)->text(), tableWidget->item(i, 2)->text());
+                             .arg(remarkItem->text(), responseItem->text());
         appendReceiveText("     自动应答", resStr);
 
         // 主页延时应答勾选检查
         if (!delayFunction->isChecked()) {
-            return;
+            break;
         }
         // 是否勾选延时应答
         QCheckBox* cb2 = qobject_cast<QCheckBox*>(tableWidget->cellWidget(i, 4));
-        if (!cb2->isChecked()) {
-            return;
+        if (!cb2 || !cb2->isChecked()) {
+            break;
         }
 
+        QTableWidgetItem* timeoutItem = tableWidget->item(i, 5);
         // 判断是否有延时应答内容
-        if (!(tableWidget->item(i, 5)->text().remove(' ').length() > 0)) {
-            return;
+        if (!timeoutItem || timeoutItem->text().remove(' ').isEmpty()) {
+            break;
         }
 
         // 设置定时器，延时发送
         QTimer::singleShot(cb2->text().toInt(), this, [=]() {
-            onResponseToDelay(clientSocket, tableWidget->item(i, 3)->text(), tableWidget->item(i, 5)->text());
+            onResponseToDelay(clientSocket, remarkItem->text(), timeoutItem->text());
         });
 
         qDebug() << "自动应答：" << hexString;
@@ -589,7 +596,6 @@ void HomePage::onInputRuleButtonCliecked(const InputRule& rule)
     QCheckBox* delayStatus = new QCheckBox(QString::number(rule.delayTime));
     delayStatus->setChecked(true);
     tmp->setCellWidget(row, 4, delayStatus);
-    tmp->setItem(row, 4, new QTableWidgetItem(rule.delayTime));
     tmp->setItem(row, 5, new QTableWidgetItem(rule.responseDelay));
 }
 

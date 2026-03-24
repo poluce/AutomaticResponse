@@ -18,9 +18,17 @@ LocalSqlLite* LocalSqlLite::instance()
     return instance;
 }
 
-LocalSqlLite::LocalSqlLite(QObject* parent)
+LocalSqlLite::LocalSqlLite(QObject* parent, const QString& databaseName)
     : QObject { parent }
+    , connectionName(databaseName.isEmpty() ? QStringLiteral(DB_NAME) : databaseName)
 {
+    if (QSqlDatabase::contains(connectionName)) {
+        QSqlDatabase::removeDatabase(connectionName);
+    }
+
+    QSqlDatabase db1 = QSqlDatabase::addDatabase("QSQLITE", connectionName);
+    db1.setDatabaseName(databaseName.isEmpty() ? QStringLiteral(DB_NAME) : databaseName);
+
     initDatabase();
     // loadData();
     readDSCAutoReplyData();
@@ -29,10 +37,7 @@ LocalSqlLite::LocalSqlLite(QObject* parent)
 void LocalSqlLite::initDatabase()
 {
     // 判断文件是否已存在
-    bool existed = QFile::exists(DB_NAME);
-    // 添加一个数据库连接，类型指定为 SQLite
-    QSqlDatabase db1 = QSqlDatabase::addDatabase("QSQLITE");
-    db1.setDatabaseName(DB_NAME); // 对于 QSQLITE 驱动程序，如果指定的数据库名称不存在，则会创建该文件
+    bool existed = QFile::exists(db().databaseName());
 
     if (!existed) {
         qDebug() << "数据库文件不存在，重新创建";
@@ -85,7 +90,7 @@ void LocalSqlLite::setDatabase()
 
 QSqlDatabase LocalSqlLite::db()
 {
-    return QSqlDatabase::database();
+    return QSqlDatabase::database(connectionName);
 }
 
 // 用来从指定的congfig文件
@@ -144,10 +149,23 @@ void LocalSqlLite::loadData()
     }
 }
 
-QVector<AutoReplyRule> LocalSqlLite::readDSCAutoReplyData()
+QVector<AutoReplyRule> LocalSqlLite::readAutoReplyData(const DataName& dataName)
 {
+    QString tableName;
+    if (dataName == DataName::DSC) {
+        tableName = "auto_reply_rules_dsc";
+    } else if (dataName == DataName::ARC) {
+        tableName = "auto_reply_rules_arc";
+    } else if (dataName == DataName::TG) {
+        tableName = "auto_reply_rules_tg";
+    } else {
+        qWarning() << "readAutoReplyData: 未知的 DataName 类型。";
+        return {};
+    }
+
     QVector<AutoReplyRule> results;
-    QString sql = "SELECT id,is_enabled, match_command, response_template, remarks, delayed_time,is_delay_enabled, timeout_response FROM auto_reply_rules_dsc";
+    QString sql = QString("SELECT id,is_enabled, match_command, response_template, remarks, delayed_time,is_delay_enabled, timeout_response FROM %1")
+                      .arg(tableName);
     QSqlQuery query(sql);
     while (query.next()) {
         AutoReplyRule tmp;
@@ -163,48 +181,21 @@ QVector<AutoReplyRule> LocalSqlLite::readDSCAutoReplyData()
         qDebug() << tmp;
     }
     return results;
+}
+
+QVector<AutoReplyRule> LocalSqlLite::readDSCAutoReplyData()
+{
+    return readAutoReplyData(DataName::DSC);
 }
 
 QVector<AutoReplyRule> LocalSqlLite::readTGAutoReplyData()
 {
-    QVector<AutoReplyRule> results;
-    QString sql = "SELECT id,is_enabled, match_command, response_template, remarks, delayed_time,is_delay_enabled, timeout_response FROM auto_reply_rules_tg";
-    QSqlQuery query(sql);
-    while (query.next()) {
-        AutoReplyRule tmp;
-        tmp.id = query.value(0).toInt();
-        tmp.isEnabled = query.value(1).toInt() == 1;
-        tmp.matchCommand = query.value(2).toString();
-        tmp.responseTemplate = query.value(3).toString();
-        tmp.remarks = query.value(4).toString();
-        tmp.delayedTime = query.value(5).toInt();
-        tmp.isDelayEnabled = query.value(6).toInt() == 1;
-        tmp.timeoutResponse = query.value(7).toString();
-        results.append(tmp);
-        qDebug() << tmp;
-    }
-    return results;
+    return readAutoReplyData(DataName::TG);
 }
 
 QVector<AutoReplyRule> LocalSqlLite::readARCAutoReplyData()
 {
-    QVector<AutoReplyRule> results;
-    QString sql = "SELECT id,is_enabled, match_command, response_template, remarks, delayed_time,is_delay_enabled, timeout_response FROM auto_reply_rules_arc";
-    QSqlQuery query(sql);
-    while (query.next()) {
-        AutoReplyRule tmp;
-        tmp.id = query.value(0).toInt();
-        tmp.isEnabled = query.value(1).toInt() == 1;
-        tmp.matchCommand = query.value(2).toString();
-        tmp.responseTemplate = query.value(3).toString();
-        tmp.remarks = query.value(4).toString();
-        tmp.delayedTime = query.value(5).toInt();
-        tmp.isDelayEnabled = query.value(6).toInt() == 1;
-        tmp.timeoutResponse = query.value(7).toString();
-        results.append(tmp);
-        qDebug() << tmp;
-    }
-    return results;
+    return readAutoReplyData(DataName::ARC);
 }
 
 void LocalSqlLite::writeAutoReplyData(const DataName& dataName, const QVector<AutoReplyRule>& data)

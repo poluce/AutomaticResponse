@@ -18,14 +18,15 @@ public:
     static LocalSqlLite* instance();
 
     // 读数据
+    QVector<AutoReplyRule> readAutoReplyData(const DataName& dataName);
     QVector<AutoReplyRule> readDSCAutoReplyData();
     QVector<AutoReplyRule> readTGAutoReplyData();
     QVector<AutoReplyRule> readARCAutoReplyData();
     // 写数据
     void writeAutoReplyData(const DataName& dataName, const QVector<AutoReplyRule>& data);
 
-private:
-    explicit LocalSqlLite(QObject* parent = nullptr);
+public:
+    explicit LocalSqlLite(QObject* parent = nullptr, const QString& databaseName = QString());
     LocalSqlLite(const LocalSqlLite&) = delete;            // 禁止拷贝构造
     LocalSqlLite& operator=(const LocalSqlLite&) = delete; // 禁止赋值
     void initDatabase();
@@ -39,6 +40,9 @@ private:
     void loadData();
 
 signals:
+
+private:
+    QString connectionName;
 };
 
 #endif // LOCALSQLLITE_H

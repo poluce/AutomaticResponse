@@ -1,7 +1,6 @@
 #include "customstyle.h"
 #include "localsqllite.h"
 #include "mainwindow.h"
-#include "widget.h"
 
 #include <QApplication>
 #include <QFontDatabase>

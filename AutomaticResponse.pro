@@ -17,8 +17,7 @@ SOURCES += \
     src/mainwindow.cpp \
     src/sidebar.cpp \
     src/sidebaroptionsbutton.cpp \
-    src/sidebarwidget.cpp \
-    src/widget.cpp
+    src/sidebarwidget.cpp
 
 
 HEADERS += \
@@ -30,12 +29,7 @@ HEADERS += \
     src/mainwindow.h \
     src/sidebar.h \
     src/sidebaroptionsbutton.h \
-    src/sidebarwidget.h \
-    src/widget.h
-
-
-FORMS += \
-    src/widget.ui
+    src/sidebarwidget.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
