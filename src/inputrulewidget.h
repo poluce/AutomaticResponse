@@ -16,6 +16,7 @@ public:
     void initUI();
     void initLayout();
     void initConnect();
+    void setData(const InputRule& rule);
 
 signals:
     void InputRuleButtonCliecked(const InputRule& rule);

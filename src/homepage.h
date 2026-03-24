@@ -43,6 +43,7 @@ private slots:
     void onClearSendButtonClicked();
     void oncCearReceiveButtonClicked();
     void onInputRuleButtonCliecked(const InputRule& rule);
+    void onSendButtonClicked();
 
     void deleteActionTriggered();
     void clearActionTriggered();

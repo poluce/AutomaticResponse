@@ -21,7 +21,6 @@ HomePage::HomePage(LocalSqlLite* database, QWidget* parent)
 
 HomePage::~HomePage()
 {
-
     // 添加关闭程序 保存数据
     localSqlLite->writeAutoReplyData(LocalSqlLite::DataName::DSC, getTableData("DSC"));
     localSqlLite->writeAutoReplyData(LocalSqlLite::DataName::ARC, getTableData("ARC"));
@@ -203,7 +202,18 @@ void HomePage::initConnect()
     connect(tcpServer, &QTcpServer::newConnection, this, &HomePage::onNewConnection);
     connect(clearReceiveButton, &QPushButton::clicked, this, &HomePage::oncCearReceiveButtonClicked);
     connect(clearSendButton, &QPushButton::clicked, this, &HomePage::onClearSendButtonClicked);
+    connect(sendButton, &QPushButton::clicked, this, &HomePage::onSendButtonClicked);
     connect(inputWidget, &InputRuleWidget::InputRuleButtonCliecked, this, &HomePage::onInputRuleButtonCliecked);
+    connect(responseTableDSC, &QTableWidget::cellDoubleClicked, this, [=](int row, int column) {
+        Q_UNUSED(column)
+        InputRule rule;
+        rule.commandMatching = responseTableDSC->item(row, 1)->text();
+        rule.responseTemplate = responseTableDSC->item(row, 2)->text();
+        rule.remark = responseTableDSC->item(row, 3)->text();
+        rule.delayTime = qobject_cast<QCheckBox*>(responseTableDSC->cellWidget(row, 4))->text().toInt();
+        rule.responseDelay = responseTableDSC->item(row, 5)->text();
+        inputWidget->setData(rule);
+    });
 }
 
 void HomePage::initData()
@@ -274,7 +284,7 @@ void HomePage::sendResponseMessage(QTcpSocket* clientSocket, QString data, const
 
         QString resStr = QString("%1::%2")
                              .arg(tableWidget->item(i, 3)->text(), tableWidget->item(i, 2)->text());
-        appendReceiveText("自动应答", resStr);
+        appendReceiveText("     自动应答", resStr);
 
         // 主页延时应答勾选检查
         if (!delayFunction->isChecked()) {
@@ -547,7 +557,7 @@ void HomePage::onResponseToDelay(QTcpSocket* socket, QString title, QString str)
     socket->flush();
 
     QString msg = QString("%1 :: %2").arg(title, str);
-    appendReceiveText("延时应答", msg);
+    appendReceiveText("     延时应答", msg);
 }
 
 void HomePage::onClearSendButtonClicked()
@@ -581,6 +591,17 @@ void HomePage::onInputRuleButtonCliecked(const InputRule& rule)
     tmp->setCellWidget(row, 4, delayStatus);
     tmp->setItem(row, 4, new QTableWidgetItem(rule.delayTime));
     tmp->setItem(row, 5, new QTableWidgetItem(rule.responseDelay));
+}
+
+void HomePage::onSendButtonClicked()
+{
+    QString hexString = sendTextEdit->toPlainText().remove(' ');
+    QByteArray hexData = QByteArray::fromHex(hexString.toUtf8());
+    for (auto it : clientList) {
+        it->write(hexData);
+    }
+
+    appendReceiveText("     发送", hexData.toHex(' '));
 }
 
 void HomePage::deleteActionTriggered()

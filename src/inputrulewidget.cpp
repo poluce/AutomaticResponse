@@ -82,6 +82,15 @@ void InputRuleWidget::initConnect()
     connect(responseDelay, &QLineEdit::editingFinished, this, &InputRuleWidget::onEditingFinished);
 }
 
+void InputRuleWidget::setData(const InputRule& rule)
+{
+    commandMatching->setText(rule.commandMatching);
+    responseTemplate->setText(rule.responseTemplate);
+    delayTime->setValue(rule.delayTime);
+    responseDelay->setText(rule.responseDelay);
+    remark->setText(rule.remark);
+}
+
 void InputRuleWidget::onSetButtonClicked()
 {
     InputRule rule;
