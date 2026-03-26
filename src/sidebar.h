@@ -33,6 +33,7 @@ public:
     void setIncreasedWidth(quint32 increasedWidth); // 设置展开增加宽度
     void setExpandTime(int ms);                     // 设置展开时间
     void setBackgroundBrush(const QBrush &brush);   // 设置背景色绘制笔刷
+    void setBackgroundRadius(qreal radius);         // 设置背景圆角
     void setBorderLinePen(const QPen &pen);         // 设置右侧边界线绘制笔
     int childrenCumulativeHeight();                 // 计算子控件的累计总高度，包括布局边距和控件间距
 
@@ -60,6 +61,7 @@ private:
     QSize initialSize;                           // 初始尺寸
     QSize endSize;                               // 终止尺寸
     QBrush backgroundBrush{qRgb(243, 243, 243)}; // 背景色绘制笔刷
+    qreal backgroundRadius = 0.0;                // 背景圆角半径
     QPen borderLinePen{qRgb(229, 229, 229)};     // 右侧边界线绘制笔
 };
 

@@ -1,5 +1,7 @@
 #include "sidebarwidget.h"
 #include "customstyle.h"
+#include <QLinearGradient>
+
 SidebarWidget::SidebarWidget(QWidget* parent, int initialWidth)
     : Sidebar { parent, initialWidth }
 {
@@ -9,6 +11,14 @@ SidebarWidget::SidebarWidget(QWidget* parent, int initialWidth)
 
 void SidebarWidget::initUI()
 {
+    QLinearGradient backgroundGradient(0, 0, 0, 1);
+    backgroundGradient.setCoordinateMode(QGradient::ObjectBoundingMode);
+    backgroundGradient.setColorAt(0.0, QColor("#14D4FF"));
+    backgroundGradient.setColorAt(1.0, QColor("#B76ADE"));
+    setBackgroundBrush(QBrush(backgroundGradient));
+    setBackgroundRadius(8.0);
+    setBorderLinePen(QPen(Qt::transparent));
+
     homePage = new SidebarOptionsButton(this, 0);
     configPage = new SidebarOptionsButton(this, 1);
     databasePage = new SidebarOptionsButton(this, 2);

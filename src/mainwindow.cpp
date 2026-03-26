@@ -18,21 +18,31 @@ void MainWindow::initUI()
 {
     // 加载字体文件
     CustomStyle::instance();
-    // 加载配置文件
-    CustomStyle::loadStyleSheet(this, ":/customQss/mainWindow.css");
 
-    setCentralWidget(new QWidget);
+    QWidget* rootWidget = new QWidget;
+    rootWidget->setObjectName("MainWindow_centralWidget");
+    rootWidget->setAttribute(Qt::WA_StyledBackground, true);
+    setCentralWidget(rootWidget);
+
     resize(800, 600);
     setWindowTitle("自动应答服务端");
 
     sidebar = new SidebarWidget(this, 50);
     sidebar->setObjectName("MainWindow_sideWidget");
     sidebar->raise();
+
     mainStackedWidget = new QStackedWidget;
+    mainStackedWidget->setObjectName("MainWindow_mainStackedWidget");
+    mainStackedWidget->setAttribute(Qt::WA_StyledBackground, true);
+
     homePage = new HomePage(LocalSqlLite::instance());
+    homePage->setObjectName("MainWindow_homePage");
     mainStackedWidget->addWidget(homePage);
     mainStackedWidget->addWidget(new QWidget);
     mainStackedWidget->addWidget(new QWidget);
+
+    // 在对象名和控件树就位后再加载样式，确保选择器能命中。
+    CustomStyle::loadStyleSheet(centralWidget(), ":/customQss/mainWindow.css");
 }
 
 void MainWindow::initLayout()

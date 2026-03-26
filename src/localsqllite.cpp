@@ -31,21 +31,22 @@ LocalSqlLite::LocalSqlLite(QObject* parent, const QString& databaseName)
 
     initDatabase();
     // loadData();
-    readDSCAutoReplyData();
 }
 
 void LocalSqlLite::initDatabase()
 {
+    QSqlDatabase database = db();
+
     // 判断文件是否已存在
-    bool existed = QFile::exists(db().databaseName());
+    bool existed = QFile::exists(database.databaseName());
 
     if (!existed) {
         qDebug() << "数据库文件不存在，重新创建";
         setDatabase();
     }
 
-    if (!db().open()) {
-        qDebug() << "打开数据库失败:" << db().lastError().text();
+    if (!database.isOpen() && !database.open()) {
+        qDebug() << "打开数据库失败:" << database.lastError().text();
         return;
     }
 
@@ -67,12 +68,16 @@ void LocalSqlLite::createMissingTables(const QStringList& tableList)
         created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
     );)";
 
-    db().open();
-    QSqlQuery query;
+    QSqlDatabase database = db();
+    if (!database.isOpen() && !database.open()) {
+        qWarning() << "创建缺失数据表前打开数据库失败:" << database.lastError().text();
+        return;
+    }
+
+    QSqlQuery query(database);
     for (auto& it : tableList) {
         QString querySql = sql.arg(it);
-        query.exec(querySql);
-        if (query.lastError().isValid()) {
+        if (!query.exec(querySql)) {
             qDebug() << "创建" << it << "表失败:" << query.lastError().text();
         } else {
             qDebug() << "创建" << it << "表成功！";
@@ -112,8 +117,13 @@ void LocalSqlLite::loadData()
     }
 
     QJsonObject obj = doc.object();
-    db().open();
-    QSqlQuery query;
+    QSqlDatabase database = db();
+    if (!database.isOpen() && !database.open()) {
+        qWarning() << "加载配置数据前打开数据库失败:" << database.lastError().text();
+        return;
+    }
+
+    QSqlQuery query(database);
     QString insertSql = R"(INSERT INTO auto_reply_rules
         (is_enabled, match_command, response_template, remarks, delayed_time, timeout_response)
         VALUES (:enabled, :cmd, :resp, :remark, :delay, :timeout))";
@@ -163,10 +173,21 @@ QVector<AutoReplyRule> LocalSqlLite::readAutoReplyData(const DataName& dataName)
         return {};
     }
 
+    QSqlDatabase database = db();
+    if (!database.isOpen() && !database.open()) {
+        qWarning() << "读取" << tableName << "前打开数据库失败:" << database.lastError().text();
+        return {};
+    }
+
     QVector<AutoReplyRule> results;
     QString sql = QString("SELECT id,is_enabled, match_command, response_template, remarks, delayed_time,is_delay_enabled, timeout_response FROM %1")
                       .arg(tableName);
-    QSqlQuery query(sql);
+    QSqlQuery query(database);
+    if (!query.exec(sql)) {
+        qWarning() << "读取" << tableName << "失败:" << query.lastError().text();
+        return {};
+    }
+
     while (query.next()) {
         AutoReplyRule tmp;
         tmp.id = query.value(0).toInt();
@@ -229,23 +250,30 @@ void LocalSqlLite::writeAutoReplyData(const DataName& dataName, const QVector<Au
     // 得到最终的 SQL 语句
     QString finalSql = sqlTemplate.arg(tableName);
 
-    if (!db().transaction()) {
-        qWarning() << "开启事务失败：" << db().lastError().text();
+    QSqlDatabase database = db();
+    if (!database.isOpen() && !database.open()) {
+        qWarning() << "写入" << tableName << "前打开数据库失败:" << database.lastError().text();
         return;
     }
 
-    QSqlQuery query;
+    if (!database.transaction()) {
+        qWarning() << "开启" << tableName << "事务失败：" << database.lastError().text();
+        return;
+    }
+
+    QSqlQuery query(database);
 
     QString deleteSql = QString("DELETE FROM %1").arg(tableName);
     if (!query.exec(deleteSql)) {
-        qDebug() << "清空旧数据失败：" << query.lastError().text();
-        db().rollback();
+        qDebug() << "清空" << tableName << "旧数据失败：" << query.lastError().text();
+        database.rollback();
         return;
     }
 
     // 循环外部准备语句
     if (!query.prepare(finalSql)) {
-        qDebug() << "SQL 语句准备失败：" << query.lastError().text();
+        qDebug() << "准备" << tableName << "写入语句失败：" << query.lastError().text();
+        database.rollback();
         return;
     }
 
@@ -258,15 +286,15 @@ void LocalSqlLite::writeAutoReplyData(const DataName& dataName, const QVector<Au
         query.bindValue(":is_delay_enabled", it.isDelayEnabled ? 1 : 0);
         query.bindValue(":timeout_response", it.timeoutResponse);
         if (!query.exec()) {
-            qDebug() << "更新数据失败：" << query.lastError().text() << "执行语句：" << query.lastQuery();
+            qDebug() << "更新" << tableName << "数据失败：" << query.lastError().text() << "执行语句：" << query.lastQuery();
             qDebug() << it;
         }
     }
 
-    if (db().commit()) {
+    if (database.commit()) {
         qDebug() << "自动回复数据写入成功并提交。";
     } else {
-        qDebug() << "数据提交失败，已回滚：" << db().lastError().text();
+        qDebug() << tableName << "数据提交失败，已回滚：" << database.lastError().text();
     }
 }
 

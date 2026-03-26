@@ -90,6 +90,11 @@ void Sidebar::setBackgroundBrush(const QBrush& brush)
     this->backgroundBrush = brush;
 }
 
+void Sidebar::setBackgroundRadius(qreal radius)
+{
+    this->backgroundRadius = qMax<qreal>(0.0, radius);
+}
+
 void Sidebar::setBorderLinePen(const QPen& pen)
 {
     this->borderLinePen = pen;
@@ -138,9 +143,22 @@ void Sidebar::resizeEvent(QResizeEvent*)
 void Sidebar::paintEvent(QPaintEvent*)
 {
     QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    QRectF backgroundRect = rect().adjusted(0.5, 0.5, -0.5, -0.5);
     painter.setBrush(this->backgroundBrush);
     painter.setPen(Qt::PenStyle::NoPen);
-    painter.drawRect(this->rect());
-    painter.setPen(this->borderLinePen);
-    painter.drawLine(this->width(), 0, this->width(), this->height());
+
+    if (this->backgroundRadius > 0.0) {
+        painter.drawRoundedRect(backgroundRect, this->backgroundRadius, this->backgroundRadius);
+    } else {
+        painter.drawRect(backgroundRect);
+    }
+
+    if (this->borderLinePen.style() != Qt::NoPen && this->borderLinePen.color().alpha() > 0) {
+        painter.setPen(this->borderLinePen);
+        qreal inset = this->backgroundRadius > 0.0 ? qMin(this->backgroundRadius, backgroundRect.height() / 2.0) : 0.0;
+        painter.drawLine(QPointF(backgroundRect.right(), backgroundRect.top() + inset),
+                         QPointF(backgroundRect.right(), backgroundRect.bottom() - inset));
+    }
 }

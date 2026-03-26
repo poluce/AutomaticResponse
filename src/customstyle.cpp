@@ -10,17 +10,23 @@ CustomStyle& CustomStyle::instance()
 
 void CustomStyle::addToolButtonIcon(QToolButton* button, const QString& iconName, int size)
 {
-    button->setText(CustomStyle::instance().getIconChar(iconName));
-    button->setFont(CustomStyle::instance().getIconFont(size));
-    QFont font = CustomStyle::instance().getIconFont(size);
-    font.setStyleStrategy(QFont::PreferAntialias); // 开启抗锯齿
-    button->setFont(font);
+    CustomStyle& style = CustomStyle::instance();
+    if (style.ensureIconFontLoaded()) {
+        button->setText(style.getIconChar(iconName));
+        QFont font = style.getIconFont(size);
+        font.setStyleStrategy(QFont::PreferAntialias); // 开启抗锯齿
+        button->setFont(font);
+    } else {
+        button->setIcon(QIcon(style.getPixmapPath(iconName)));
+        button->setIconSize(QSize(size, size));
+    }
     button->setToolButtonStyle(Qt::ToolButtonTextUnderIcon); // 设置为上图下文
     button->setStyleSheet("QToolButton { background-color: transparent; border: none; }");
 }
 
 QFont CustomStyle::getIconFont(int size) const
 {
+    const_cast<CustomStyle*>(this)->ensureIconFontLoaded();
     return QFont(iconFontFamily, size);
 }
 
@@ -88,6 +94,11 @@ QIcon CustomStyle::geticon(const QString& iconname)
 
 bool CustomStyle::initFont(const QString& fontPath)
 {
+    if (!QFile::exists(fontPath)) {
+        qDebug() << "图标字体资源不存在:" << fontPath;
+        return false;
+    }
+
     int fontId = QFontDatabase::addApplicationFont(fontPath);
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
     if (fontFamilies.empty()) {
@@ -96,6 +107,15 @@ bool CustomStyle::initFont(const QString& fontPath)
     }
     iconFontFamily = fontFamilies.at(0);
     return true;
+}
+
+bool CustomStyle::ensureIconFontLoaded()
+{
+    if (!iconFontFamily.isEmpty()) {
+        return true;
+    }
+
+    return initFont();
 }
 
 QChar CustomStyle::getIconChar(const QString& str) const
@@ -119,6 +139,5 @@ void CustomStyle::initFontMap()
 CustomStyle::CustomStyle(QObject* parent)
     : QObject { parent }
 {
-    initFont();
     initFontMap();
 }

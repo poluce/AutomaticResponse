@@ -19,6 +19,7 @@ public:
 
     bool initFont(const QString& fontPath = ":/iconfont/autoResponseIconFont.ttf");
     void initFontMap();
+    bool ensureIconFontLoaded();
 
     QChar getIconChar(const QString& str) const;
     QFont getIconFont(int size = 16) const;
