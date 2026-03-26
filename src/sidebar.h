@@ -26,7 +26,6 @@ class Sidebar : public QWidget
     Q_OBJECT
 public:
     explicit Sidebar(QWidget *parent, int initialWidth = 50);
-    ~Sidebar();
 
     void addWidget(QWidget *btn);                   // 添加控件
     void addItem(QLayoutItem *item);                // 添加弹簧

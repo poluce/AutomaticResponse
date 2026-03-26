@@ -1,15 +1,8 @@
 #include <QtTest>
 #include <QSqlDatabase>
 
+#include "test_localsqllite.h"
 #include "../src/localsqllite.h"
-
-class LocalSqlLiteTest : public QObject {
-    Q_OBJECT
-
-private slots:
-    void initTestCase();
-    void readAutoReplyData_readsDataByDataName();
-};
 
 void LocalSqlLiteTest::initTestCase()
 {
@@ -52,4 +45,3 @@ void LocalSqlLiteTest::readAutoReplyData_readsDataByDataName()
 }
 
 QTEST_MAIN(LocalSqlLiteTest)
-#include "test_localsqllite.moc"

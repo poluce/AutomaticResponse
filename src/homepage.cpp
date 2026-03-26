@@ -12,6 +12,11 @@
 HomePage::HomePage(LocalSqlLite* database, QWidget* parent)
     : QWidget { parent }, localSqlLite { database }
 {
+    Q_ASSERT_X(localSqlLite != nullptr, "HomePage::HomePage", "LocalSqlLite dependency is required");
+    if (!localSqlLite) {
+        qFatal("HomePage requires a valid LocalSqlLite instance.");
+    }
+
     initUI();
     initLayout();
     initConnect();
@@ -77,7 +82,7 @@ void HomePage::initUI()
 
     scheduledReportBox = new QCheckBox("定时上发");
     scheduledReportButton = new QPushButton("上发编辑");
-    scheduledReportTimer = new QTimer;
+    scheduledReportTimer = new QTimer(this);
 
     // 客户端显示
     clienInfoGroup = new QGroupBox("链接客户端");
@@ -287,6 +292,8 @@ void HomePage::sendResponseMessage(QTcpSocket* clientSocket, QString data, const
         QString hexString = responseItem->text().remove(' '); // 移除空格转换为16进制数据
         QByteArray hexData = QByteArray::fromHex(hexString.toUtf8());
         clientSocket->write(hexData);
+        clientSocket->flush();
+        clientSocket->waitForBytesWritten(1000);
 
         QString resStr = QString("%1::%2")
                              .arg(remarkItem->text(), responseItem->text());
@@ -435,10 +442,10 @@ QVector<AutoReplyRule> HomePage::readTableData(QTableWidget* tabWidget)
 void HomePage::initMenu()
 {
     // 添加菜单项
-    QAction* deleteAction = new QAction("删除");
-    QAction* separator = new QAction();
+    QAction* deleteAction = new QAction("删除", this);
+    QAction* separator = new QAction(this);
     separator->setSeparator(true); // 添加分隔符
-    QAction* clearAction = new QAction("清空");
+    QAction* clearAction = new QAction("清空", this);
 
     for (QTableWidget* table : { responseTableDSC, responseTableARC, responseTableTG }) {
         table->addAction(deleteAction);
@@ -562,6 +569,7 @@ void HomePage::onResponseToDelay(QTcpSocket* socket, QString title, QString str)
     QByteArray hexData = QByteArray::fromHex(raw.remove(' ').toUtf8());
     socket->write(hexData);
     socket->flush();
+    socket->waitForBytesWritten(1000);
 
     QString msg = QString("%1 :: %2").arg(title, str);
     appendReceiveText("     延时应答", msg);
@@ -605,6 +613,8 @@ void HomePage::onSendButtonClicked()
     QByteArray hexData = QByteArray::fromHex(hexString.toUtf8());
     for (auto it : clientList) {
         it->write(hexData);
+        it->flush();
+        it->waitForBytesWritten(1000);
     }
 
     appendReceiveText("     发送", hexData.toHex(' '));

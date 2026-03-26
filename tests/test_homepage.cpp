@@ -1,17 +1,9 @@
 #include <QtTest>
 #include <QSqlDatabase>
 
+#include "test_homepage.h"
 #include "../src/homepage.h"
 #include "../src/localsqllite.h"
-
-class HomePageTest : public QObject {
-    Q_OBJECT
-
-private slots:
-    void initTestCase();
-    void sendResponseMessage_skipsDisabledRowsAndMatchesLaterRule();
-    void onInputRuleButtonCliecked_preservesDelayTimeInTableData();
-};
 
 void HomePageTest::initTestCase()
 {
@@ -77,4 +69,3 @@ void HomePageTest::onInputRuleButtonCliecked_preservesDelayTimeInTableData()
 }
 
 QTEST_MAIN(HomePageTest)
-#include "test_homepage.moc"

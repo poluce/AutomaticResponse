@@ -38,11 +38,6 @@ Sidebar::Sidebar(QWidget* parent, int initialWidth)
     this->resize(initialWidth, this->window()->height());
 }
 
-Sidebar::~Sidebar()
-{
-    this->animation->deleteLater();
-}
-
 void Sidebar::autoExpand()
 {
     this->expand();

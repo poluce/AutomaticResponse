@@ -22,7 +22,7 @@
 class HomePage : public QWidget {
     Q_OBJECT
 public:
-    explicit HomePage(LocalSqlLite* database = nullptr, QWidget* parent = nullptr);
+    explicit HomePage(LocalSqlLite* database, QWidget* parent = nullptr);
     ~HomePage();
     void initUI();
     void initLayout();

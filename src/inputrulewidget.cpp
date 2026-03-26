@@ -27,7 +27,6 @@ void InputRuleWidget::initUI()
     remarkGroupBox = new QGroupBox("备注");
     responseDelayGroupBox = new QGroupBox("延迟应答");
     setRuleButton = new QPushButton("设置");
-    remark = new QLineEdit();
 
     // 16进制输入
     for (auto it : { commandMatching, responseTemplate, responseDelay }) {
